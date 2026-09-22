@@ -57,7 +57,7 @@ class modPrescription extends DolibarrModules
 		$this->editor_name = 'modPrescription';
 		$this->editor_url = 'https://github.com/kongzong/dolibarr-modprescription';
 
-		$this->version = '0.1.0';
+		$this->version = '0.1.1';
 
 		$this->const_name = 'MAIN_MODULE_'.strtoupper($this->name);
 

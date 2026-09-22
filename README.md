@@ -4,7 +4,7 @@ Dolibarr 22.0.x 外部模块：面向中医馆/中西医结合诊所的处方。
 医疗模块群一期第三个模块（MVP 最后一块），依赖 [modPatient](https://github.com/kongzong/dolibarr-modpatient) ≥ 0.1.3
 与 [modMedRecord](https://github.com/kongzong/dolibarr-modmedrecord) ≥ 0.1.3。
 
-当前版本：**0.1.0（阶段 4 REST 完成，待发布）**。规格见 [docs/spec-prescription-v0.1.md](docs/spec-prescription-v0.1.md)。
+当前版本：**0.1.1（2026-09-22，modPharmacy 前置改动）**：业务类新增 `markDispensed()` / `markDispenseUndone()`（已签发 ⇄ 已发药的状态桥，由 modPharmacy 驱动；乐观锁 + PRESCRIPTION_DISPENSE[_UNDONE] 审计），`llx_prescription` 加 `date_dispensed` / `fk_user_dispensed`（升级脚本 `sql/upgrade/upgrade_0.1.0_to_0.1.1.sql`，幂等，已有行保持 NULL，不需重启用）。0.1.0 见下方规格。规格见 [docs/spec-prescription-v0.1.md](docs/spec-prescription-v0.1.md)。
 2026-09-21：业务类改名 `PrescriptionSheet`（原 `Prescription`）——REST API 类名被 core 钉死为模块目录名，业务类让位；依赖同步为 modMedRecord ≥ 0.1.3（其业务类同期改名 `MedicalRecord`）。
 
 ## 设计要点

@@ -21,6 +21,8 @@ CREATE TABLE llx_prescription(
 	status				smallint DEFAULT 0 NOT NULL,
 	date_issued			datetime DEFAULT NULL,
 	fk_user_issue		integer DEFAULT NULL,
+	date_dispensed		datetime DEFAULT NULL,
+	fk_user_dispensed	integer DEFAULT NULL,
 	void_reason			varchar(255) DEFAULT NULL,
 	date_void			datetime DEFAULT NULL,
 	fk_user_void		integer DEFAULT NULL,

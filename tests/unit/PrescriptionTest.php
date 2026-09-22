@@ -181,9 +181,16 @@ class PrescriptionTest extends TestCase
 		$this->assertStringContainsString('AND status = '.'".PRESCRIPTION_STATUS_DRAFT', $cls, 'update/issue only touch drafts');
 		$this->assertStringContainsString('PRESCRIPTION_STATUS_DRAFT, PRESCRIPTION_STATUS_ISSUED', $cls, 'dispensed cannot be voided here');
 		$this->assertStringContainsString("'PrescriptionErrFreeLineNotAllowed'", $cls);
-		foreach (array('function canEdit', 'function canIssue', 'function canVoid', 'function copyAsNew', 'function checkAllergies', 'function diffAgainst') as $fn) {
+		foreach (array('function canEdit', 'function canIssue', 'function canVoid', 'function copyAsNew', 'function checkAllergies', 'function diffAgainst', 'function markDispensed', 'function markDispenseUndone') as $fn) {
 			$this->assertStringContainsString($fn, $cls);
 		}
+		// Pharmacy bridge: only pharmacy drives these, both use a conditional
+		// status update as the idempotent gate (0.1.1, spec-pharmacy §2)
+		$this->assertStringContainsString("'PRESCRIPTION_DISPENSE'", $cls);
+		$this->assertStringContainsString("'PRESCRIPTION_DISPENSE_UNDONE'", $cls);
+		$this->assertSame(1, substr_count($cls, 'AND status = ".PRESCRIPTION_STATUS_ISSUED'), 'markDispensed gates on the exact source status');
+		$this->assertSame(1, substr_count($cls, 'AND status = ".PRESCRIPTION_STATUS_DISPENSED'), 'markDispenseUndone gates on the exact source status');
+		$this->assertStringContainsString('date_dispensed = NULL', $cls, 'undo clears the dispense stamp');
 
 		$card = file_get_contents(__DIR__.'/../../card.php');
 		$this->assertStringContainsString("'PRESCRIPTION_READ'", $card);

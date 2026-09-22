@@ -58,6 +58,9 @@ class PrescriptionSheet extends CommonObject
 	public $status = PRESCRIPTION_STATUS_DRAFT;
 	public $date_issued;
 	public $fk_user_issue;
+	/** @var int|null Unix timestamp set by modPharmacy's markDispensed() */
+	public $date_dispensed;
+	public $fk_user_dispensed;
 	public $void_reason;
 	public $date_void;
 	public $fk_user_void;
@@ -592,6 +595,89 @@ class PrescriptionSheet extends CommonObject
 		$this->date_void = $now;
 		$this->fk_user_void = (int) $user->id;
 		patient_audit($this->db, $this->fk_patient, 'PRESCRIPTION_VOID', $user, array('ref' => $this->ref, 'prescription' => $this->id, 'reason' => dol_substr($reason, 0, 100)));
+		$this->db->commit();
+		return 1;
+	}
+
+	/**
+	 * Issued -> dispensed. Only modPharmacy (or an admin) drives this state
+	 * through the pharmacy dispense workflow (spec-pharmacy §2); the
+	 * authorization is checked there, not here.
+	 *
+	 * @param	User	$user	Acting user
+	 * @param	array	$extra	Extra audit details (e.g. dispense ref)
+	 * @return	int				1 ok, -2 not allowed, -1 error
+	 */
+	public function markDispensed(User $user, array $extra = array())
+	{
+		$this->error = '';
+		if ($this->id <= 0 || (int) $this->status !== PRESCRIPTION_STATUS_ISSUED) {
+			$this->error = 'PrescriptionErrCannotDispense';
+			return -2;
+		}
+		$now = dol_now();
+		$this->db->begin();
+		$sql = "UPDATE ".$this->db->prefix()."prescription SET status = ".PRESCRIPTION_STATUS_DISPENSED.", date_dispensed = '".$this->db->idate($now)."', fk_user_dispensed = ".((int) $user->id);
+		$sql .= " WHERE rowid = ".((int) $this->id)." AND status = ".PRESCRIPTION_STATUS_ISSUED;
+		$resql = $this->db->query($sql);
+		if (!$resql) {
+			$this->error = $this->db->lasterror();
+			$this->db->rollback();
+			return -1;
+		}
+		if ($this->db->affected_rows($resql) < 1) {
+			$this->error = 'PrescriptionErrCannotDispense';
+			$this->db->rollback();
+			return -2;
+		}
+		$this->status = PRESCRIPTION_STATUS_DISPENSED;
+		$this->date_dispensed = $now;
+		$this->fk_user_dispensed = (int) $user->id;
+		$details = array('ref' => $this->ref, 'prescription' => $this->id) + $extra;
+		patient_audit($this->db, $this->fk_patient, 'PRESCRIPTION_DISPENSE', $user, $details);
+		$this->db->commit();
+		return 1;
+	}
+
+	/**
+	 * Dispensed -> issued again (pharmacy return / dispense undone).
+	 *
+	 * @param	User	$user	Acting user
+	 * @param	string	$reason	Reason (required)
+	 * @param	array	$extra	Extra audit details (e.g. dispense ref)
+	 * @return	int				1 ok, -2 not allowed, -1 error
+	 */
+	public function markDispenseUndone(User $user, $reason, array $extra = array())
+	{
+		$this->error = '';
+		$reason = trim((string) $reason);
+		if ($this->id <= 0 || (int) $this->status !== PRESCRIPTION_STATUS_DISPENSED) {
+			$this->error = 'PrescriptionErrCannotDispense';
+			return -2;
+		}
+		if ($reason === '') {
+			$this->error = 'PrescriptionErrVoidReasonRequired';
+			return -1;
+		}
+		$this->db->begin();
+		$sql = "UPDATE ".$this->db->prefix()."prescription SET status = ".PRESCRIPTION_STATUS_ISSUED.", date_dispensed = NULL, fk_user_dispensed = NULL";
+		$sql .= " WHERE rowid = ".((int) $this->id)." AND status = ".PRESCRIPTION_STATUS_DISPENSED;
+		$resql = $this->db->query($sql);
+		if (!$resql) {
+			$this->error = $this->db->lasterror();
+			$this->db->rollback();
+			return -1;
+		}
+		if ($this->db->affected_rows($resql) < 1) {
+			$this->error = 'PrescriptionErrCannotDispense';
+			$this->db->rollback();
+			return -2;
+		}
+		$this->status = PRESCRIPTION_STATUS_ISSUED;
+		$this->date_dispensed = null;
+		$this->fk_user_dispensed = null;
+		$details = array('ref' => $this->ref, 'prescription' => $this->id, 'reason' => dol_substr($reason, 0, 100)) + $extra;
+		patient_audit($this->db, $this->fk_patient, 'PRESCRIPTION_DISPENSE_UNDONE', $user, $details);
 		$this->db->commit();
 		return 1;
 	}
