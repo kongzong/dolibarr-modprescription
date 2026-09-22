@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php-version: ['7.4', '8.1', '8.3']
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: mbstring
+
+      - name: Syntax check
+        run: find . -path ./.git -prune -o -name "*.php" -print | xargs -n1 php -l
+
+      - name: Unit tests
+        run: php tests/run_all.php
+
+  numbering-integration:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php-version: ['7.4', '8.3']
+    env:
+      DOLIBARR_DOCUMENT_ROOT: ${{ github.workspace }}/.dolibarr-core/htdocs
+      PRESCRIPTION_TEST_DB_HOST: 127.0.0.1
+      PRESCRIPTION_TEST_DB_PORT: 3306
+      PRESCRIPTION_TEST_DB_NAME: prescription_test
+      PRESCRIPTION_TEST_DB_USER: prescription_test
+      PRESCRIPTION_TEST_DB_PASSWORD: integration-test-only
+    services:
+      mariadb:
+        image: mariadb:10.6
+        env:
+          MARIADB_ROOT_PASSWORD: integration-root-only
+          MARIADB_DATABASE: prescription_test
+          MARIADB_USER: prescription_test
+          MARIADB_PASSWORD: integration-test-only
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout Dolibarr core (DoliDB driver only)
+        uses: actions/checkout@v4
+        with:
+          repository: Dolibarr/dolibarr
+          ref: '22.0.4'
+          path: .dolibarr-core
+          persist-credentials: false
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: mbstring, mysqli
+
+      - name: Concurrent prescription numbering
+        run: php tests/integration/numbering.php
+
+      - name: Render prescription sheets (TCPDF, both layouts, A4 and A5)
+        run: |
+          php tests/integration/pdf.php
+          PRESCRIPTION_PDF_TEST_FORMAT=A5 PRESCRIPTION_PDF_OUTPUT=temp/pdf-acceptance-a5 php tests/integration/pdf.php
