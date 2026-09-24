@@ -68,6 +68,8 @@ if (!$canRead) {
 
 $form = new Form($db);
 $object = new PrescriptionSheet($db);
+// Extension point for modPharmacy (dispense button + sheet list, spec-pharmacy §3.5)
+$hookmanager->initHooks(array('prescriptioncard'));
 
 if ($id > 0) {
 	$r = $object->fetch($id);
@@ -225,7 +227,7 @@ if ($action == 'copy' && $object->id > 0 && $canWrite) {
 // Prefill a fresh draft from the medical record (doctor, department, diagnosis snapshot)
 if ($action == 'create' && $prefill === null && $blocked === null && $fkMedrecordParam > 0 && isModEnabled('medrecord')) {
 	dol_include_once('/medrecord/class/medicalrecord.class.php');
-	$rec = new MedRecord($db);
+	$rec = new MedicalRecord($db);
 	if ($rec->fetch($fkMedrecordParam) > 0) {
 		$prefill = new PrescriptionSheet($db);
 		$prefill->presc_type = $typeParam;
@@ -470,7 +472,7 @@ if ($action == 'create') {
 			$recLabel = '#'.(int) $draft->fk_medrecord;
 			if (isModEnabled('medrecord')) {
 				dol_include_once('/medrecord/class/medicalrecord.class.php');
-				$tmpRec = new MedRecord($db);
+				$tmpRec = new MedicalRecord($db);
 				if ($tmpRec->fetch($draft->fk_medrecord) > 0) {
 					$recLabel = $tmpRec->ref;
 				}
@@ -487,7 +489,7 @@ if ($action == 'create') {
 	print '</td></tr>';
 	if ($draft->fk_medrecord > 0 && isModEnabled('medrecord')) {
 		dol_include_once('/medrecord/class/medicalrecord.class.php');
-		$rec = new MedRecord($db);
+		$rec = new MedicalRecord($db);
 		if ($rec->fetch($draft->fk_medrecord) > 0) {
 			print '<tr><td>'.$langs->trans("PrescriptionMedRecord").'</td><td>'.$rec->getNomUrl(1).' '.$rec->getLibStatut().'</td></tr>';
 		}
@@ -514,7 +516,7 @@ if ($action == 'create') {
 		$recLabel = '#'.(int) $object->fk_medrecord;
 		if (isModEnabled('medrecord')) {
 			dol_include_once('/medrecord/class/medicalrecord.class.php');
-			$tmpRec = new MedRecord($db);
+			$tmpRec = new MedicalRecord($db);
 			if ($tmpRec->fetch($object->fk_medrecord) > 0) {
 				$recLabel = $tmpRec->ref;
 			}
@@ -561,7 +563,7 @@ if ($action == 'create') {
 		print '<tr><td>'.$langs->trans("PrescriptionDate").'</td><td>'.dol_print_date($object->date_presc, 'dayhour').'</td></tr>';
 		if ($object->fk_medrecord && isModEnabled('medrecord')) {
 			dol_include_once('/medrecord/class/medicalrecord.class.php');
-			$rec = new MedRecord($db);
+			$rec = new MedicalRecord($db);
 			if ($rec->fetch($object->fk_medrecord) > 0) {
 				print '<tr><td>'.$langs->trans("PrescriptionMedRecord").'</td><td>'.$rec->getNomUrl(1).' '.$rec->getLibStatut().'</td></tr>';
 			}
@@ -637,6 +639,14 @@ if ($action == 'create') {
 		}
 		print dolGetButtonAction($langs->trans("PrescriptionSheetPdf"), '', 'default', dol_buildpath('/prescription/pdf.php', 1).'?id='.$object->id, '', 1, array('attr' => array('target' => '_blank')));
 		print '</div>';
+
+		// Extension point for modPharmacy: dispense button + dispense sheets
+		$parameters = array('object' => $object);
+		$reshook = $hookmanager->executeHooks('prescriptionCard', $parameters, $object, $action);
+		if ($reshook < 0) {
+			setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
+		}
+		print $hookmanager->resPrint;
 	}
 } else {
 	print load_fiche_titre($langs->trans("PrescriptionTab"), '', 'fa-prescription');
