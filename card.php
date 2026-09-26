@@ -608,8 +608,8 @@ if ($action == 'create') {
 		if ($isTcm) {
 			print '<tr><td class="titlefield">'.$langs->trans("PrescriptionDoses").'</td><td>'.((int) $object->doses).' '.$langs->trans("PrescriptionDosesUnit").($object->decoct_mode && isset($decoctModes[$object->decoct_mode]) ? ' &middot; '.$decoctModes[$object->decoct_mode] : '').'</td></tr>';
 		}
-		print '<tr><td class="titlefield tdtop">'.$langs->trans("PrescriptionUsage").'</td><td>'.dol_nl2br(dol_escape_htmltag((string) $object->usage_note)).'</td></tr>';
-		print '<tr><td class="tdtop">'.$langs->trans("PrescriptionNote").'</td><td>'.dol_nl2br(dol_escape_htmltag((string) $object->note)).'</td></tr>';
+		print '<tr><td class="titlefield tdtop">'.$langs->trans("PrescriptionUsage").'</td><td>'.dol_nl2br(dol_escape_htmltag((string) $object->usage_note, 0, 1)).'</td></tr>';
+		print '<tr><td class="tdtop">'.$langs->trans("PrescriptionNote").'</td><td>'.dol_nl2br(dol_escape_htmltag((string) $object->note, 0, 1)).'</td></tr>';
 		if ($object->allergy_override_reason) {
 			print '<tr><td>'.$langs->trans("PrescriptionAllergyReleased").'</td><td class="error">'.dol_escape_htmltag($object->allergy_override_reason).'</td></tr>';
 		}
