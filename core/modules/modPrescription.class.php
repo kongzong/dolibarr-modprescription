@@ -180,6 +180,7 @@ class modPrescription extends DolibarrModules
 			'titre' => 'PrescriptionList',
 			'mainmenu' => 'clinic',
 			'leftmenu' => 'prescription_list',
+			'prefix' => img_picto('', 'fa-file-prescription_fas_#8e24aa', 'class="paddingright pictofixedwidth"'),
 			'url' => '/prescription/list.php',
 			'langs' => 'prescription@prescription',
 			'position' => 1200 + $r,

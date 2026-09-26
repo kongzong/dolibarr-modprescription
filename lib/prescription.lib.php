@@ -155,11 +155,12 @@ function prescription_list_by_patient($db, $fkPatient, $limit = 50, $includeVoid
 {
 	global $conf;
 
-	$sql = "SELECT p.rowid, p.ref, p.presc_type, p.status, p.date_presc, p.doses, p.fk_doctor, p.fk_medrecord, p.diagnosis_text,";
+	$sql = "SELECT p.rowid, p.ref, p.presc_type, p.status, p.date_presc, p.doses, p.fk_doctor, p.fk_medrecord, p.diagnosis_text, m.ref as medrecord_ref,";
 	$sql .= " u.lastname, u.firstname,";
 	$sql .= " (SELECT COUNT(l.rowid) FROM ".$db->prefix()."prescription_line as l WHERE l.fk_prescription = p.rowid) as nb_lines";
 	$sql .= " FROM ".$db->prefix()."prescription as p";
 	$sql .= " LEFT JOIN ".$db->prefix()."user as u ON u.rowid = p.fk_doctor";
+	$sql .= " LEFT JOIN ".$db->prefix()."medrecord as m ON m.rowid = p.fk_medrecord";
 	$sql .= " WHERE p.fk_patient = ".((int) $fkPatient)." AND p.entity = ".((int) $conf->entity);
 	if (!$includeVoided) {
 		$sql .= " AND p.status <> ".PRESCRIPTION_STATUS_VOIDED;

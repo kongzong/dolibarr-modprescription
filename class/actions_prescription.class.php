@@ -101,18 +101,41 @@ class ActionsPrescription
 		if (empty($rows)) {
 			$out .= '<div class="opacitymedium">'.$langs->trans("PrescriptionNoneForRecord").'</div>';
 		} else {
-			$out .= '<table class="noborder centpercent" style="margin-top:4px;"><tr class="liste_titre">';
-			$out .= '<th>'.$langs->trans("PrescriptionRef").'</th><th>'.$langs->trans("PrescriptionType").'</th>';
-			$out .= '<th>'.$langs->trans("PrescriptionDate").'</th><th>'.$langs->trans("PrescriptionLines").'</th><th class="center">'.$langs->trans("Status").'</th></tr>';
+			// Linked dispense sheets (design §5.3 merge, option A): the visit
+			// thread's prescription/dispense block was folded into this table.
+			$canDispense = isModEnabled('pharmacy') && $user->hasRight('pharmacy', 'read');
+			if ($canDispense) {
+				dol_include_once('/pharmacy/lib/pharmacy.lib.php');
+			}
+			$out .= '<div class="div-table-responsive-no-min"><table class="tagtable liste centpercent" style="margin-top:4px;"><tr class="liste_titre">';
+			$out .= '<th style="white-space:nowrap;">'.$langs->trans("PrescriptionRef").'</th><th style="white-space:nowrap;">'.$langs->trans("PrescriptionType").'</th>';
+			$out .= '<th style="white-space:nowrap;">'.$langs->trans("PrescriptionDate").'</th><th style="white-space:nowrap;">'.$langs->trans("PrescriptionLines").'</th><th class="center" style="white-space:nowrap;">'.$langs->trans("Status").'</th>';
+			if ($canDispense) {
+				$out .= '<th style="white-space:nowrap;">'.$langs->trans("PrescriptionDispense").'</th>';
+			}
+			$out .= '</tr>';
 			foreach ($rows as $r) {
 				$out .= '<tr class="oddeven"'.((int) $r->status === PRESCRIPTION_STATUS_VOIDED ? ' style="opacity:.55"' : '').'>';
-				$out .= '<td><a href="'.dol_buildpath('/prescription/card.php', 1).'?id='.((int) $r->rowid).'">'.dol_escape_htmltag($r->ref).'</a></td>';
+				$out .= '<td style="white-space:nowrap;"><a href="'.dol_buildpath('/prescription/card.php', 1).'?id='.((int) $r->rowid).'">'.dol_escape_htmltag($r->ref).'</a></td>';
 				$out .= '<td>'.prescription_type_label($r->presc_type).'</td>';
 				$out .= '<td>'.dol_print_date($this->db->jdate($r->date_presc), 'day').'</td>';
 				$out .= '<td>'.((int) $r->nb_lines).($r->presc_type === PRESCRIPTION_TYPE_TCM && $r->doses ? ' &times; '.((int) $r->doses).$langs->trans("PrescriptionDosesUnit") : '').'</td>';
-				$out .= '<td class="center">'.prescription_status_badge($r->status).'</td></tr>';
+				$out .= '<td class="center">'.prescription_status_badge($r->status).'</td>';
+				if ($canDispense) {
+					$dispHtml = '<span class="opacitymedium">—</span>';
+					$disp = pharmacy_list_by_prescription($this->db, $r->rowid);
+					if (count($disp) > 0) {
+						$badges = array();
+						foreach ($disp as $dp) {
+							$badges[] = '<span class="badge badge-status0" style="margin:2px;"><a href="'.dol_buildpath('/pharmacy/card.php', 1).'?id='.((int) $dp->rowid).'">'.dol_escape_htmltag($dp->ref).'</a> '.dol_print_date($this->db->jdate($dp->date_dispense), 'day').'</span>';
+						}
+						$dispHtml = implode(' ', $badges);
+					}
+					$out .= '<td>'.$dispHtml.'</td>';
+				}
+				$out .= '</tr>';
 			}
-			$out .= '</table>';
+			$out .= '</table></div>';
 		}
 		$out .= '</div>';
 

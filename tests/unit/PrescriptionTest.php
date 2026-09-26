@@ -134,7 +134,10 @@ class PrescriptionTest extends TestCase
 		$tab = file_get_contents($root.'patient_tab.php');
 		$this->assertStringContainsString("hasRight('patient', 'read')", $tab);
 		$this->assertStringContainsString('patient_prepare_head(', $tab);
-		$this->assertStringContainsString('patient_summary_banner(', $tab);
+		// Design §5.1: fiche-style header inside patient tabs, no summary banner.
+		$this->assertStringContainsString('class="arearef', $tab, 'fiche-style patient header');
+		$this->assertStringNotContainsString('patient_summary_banner(', $tab, 'no summary banner inside patient tabs');
+		$this->assertStringContainsString('MedRecordBelonging', $tab, 'visit column on the patient tab list');
 		$setup = file_get_contents($root.'admin/setup.php');
 		$this->assertStringContainsString('newToken()', $setup);
 		$this->assertStringContainsString("=== 'A5' ? 'A5' : 'A4'", $setup, 'paper format allowlist');

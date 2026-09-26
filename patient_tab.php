@@ -45,7 +45,7 @@ dol_include_once('/prescription/lib/prescription.lib.php');
  * @var User $user
  */
 
-$langs->loadLangs(array("patient@patient", "prescription@prescription"));
+$langs->loadLangs(array("patient@patient", "prescription@prescription", "medrecord@medrecord"));
 
 $id = GETPOSTINT('id');
 if ($id <= 0 || !$user->hasRight('patient', 'read') || !$user->hasRight('prescription', 'read')) {
@@ -62,7 +62,15 @@ llxHeader('', $langs->trans("PrescriptionTab"));
 $head = patient_prepare_head($patient);
 print dol_get_fiche_head($head, 'prescription', $langs->trans("PatientTab"), -1, 'user');
 
-print patient_summary_banner(patient_get_summary($db, $patient->id), array(), 'prescription');
+// Patient header in the card/allergies fiche style (no summary banner here;
+// the summary mode with quick buttons is for sub-data detail pages, design §5.1)
+$linkback = '<a href="'.dol_buildpath('/patient/list.php', 1).'?restore_lastsearch_values=1">'.$langs->trans("BackToList").'</a>';
+print '<div class="arearef heightref valignmiddle centpercent">';
+print '<div class="inline-block floatleft refid refidpadding">'.img_picto('', 'user', 'class="pictofixedwidth"').'<strong>'.dol_escape_htmltag($patient->card_no).'</strong>';
+print ($patient->thirdparty ? ' - '.dol_escape_htmltag($patient->thirdparty->name) : '').'</div>';
+print '<div class="inline-block floatright">'.$linkback.'</div>';
+print '<div class="clearboth"></div></div>';
+print '<div class="underbanner clearboth"></div>';
 
 if ($user->hasRight('prescription', 'write')) {
 	$base = dol_buildpath('/prescription/card.php', 1).'?action=create&fk_patient='.$patient->id;
@@ -81,10 +89,11 @@ print '<th>'.$langs->trans("PrescriptionDate").'</th>';
 print '<th>'.$langs->trans("PrescriptionDoctor").'</th>';
 print '<th>'.$langs->trans("PrescriptionDiagnosis").'</th>';
 print '<th>'.$langs->trans("PrescriptionLines").'</th>';
+print '<th>'.$langs->trans("MedRecordBelonging").'</th>';
 print '<th class="center">'.$langs->trans("Status").'</th>';
 print '</tr>';
 if (empty($rows)) {
-	print '<tr><td colspan="7"><span class="opacitymedium">'.$langs->trans("NoRecordFound").'</span></td></tr>';
+	print '<tr><td colspan="8"><span class="opacitymedium">'.$langs->trans("NoRecordFound").'</span></td></tr>';
 }
 foreach ($rows as $r) {
 	print '<tr class="oddeven"'.((int) $r->status === PRESCRIPTION_STATUS_VOIDED ? ' style="opacity:.55"' : '').'>';
@@ -94,6 +103,12 @@ foreach ($rows as $r) {
 	print '<td>'.dol_escape_htmltag(trim($r->lastname.' '.$r->firstname)).'</td>';
 	print '<td>'.dol_escape_htmltag((string) $r->diagnosis_text).'</td>';
 	print '<td>'.((int) $r->nb_lines).'</td>';
+	$medHtml = '<span class="opacitymedium">—</span>';
+	if (!empty($r->fk_medrecord)) {
+		$medLabel = ($r->medrecord_ref !== null && $r->medrecord_ref !== '') ? $r->medrecord_ref : '#'.(int) $r->fk_medrecord;
+		$medHtml = '<a href="'.dol_buildpath('/medrecord/card.php', 1).'?id='.((int) $r->fk_medrecord).'">'.dol_escape_htmltag($medLabel).'</a>';
+	}
+	print '<td>'.$medHtml.'</td>';
 	print '<td class="center">'.prescription_status_badge($r->status).'</td>';
 	print '</tr>';
 }

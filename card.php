@@ -624,6 +624,18 @@ if ($action == 'create') {
 
 		print dol_get_fiche_end();
 
+		// clinicpay charge linkage + double-charge guard
+		$chargedBillId = 0;
+		if (isModEnabled('clinicpay')) {
+			$sqlc = "SELECT l.fk_bill as bid FROM ".$db->prefix()."clinicpay_bill_line l";
+			$sqlc .= " JOIN ".$db->prefix()."clinicpay_bill b ON l.fk_bill = b.rowid";
+			$sqlc .= " WHERE l.fk_prescription = ".((int) $object->id)." AND b.fk_patient = ".((int) $object->fk_patient)." LIMIT 1";
+			$resc = $db->query($sqlc);
+			if ($resc && ($objc = $db->fetch_object($resc))) {
+				$chargedBillId = (int) $objc->bid;
+			}
+		}
+
 		print '<div class="tabsAction">';
 		if ($object->canEdit($user)) {
 			print dolGetButtonAction($langs->trans("Modify"), '', 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&token='.newToken(), '', 1);
@@ -638,6 +650,13 @@ if ($action == 'create') {
 			print dolGetButtonAction($langs->trans("PrescriptionVoid"), '', 'delete', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=void&token='.newToken(), '', 1);
 		}
 		print dolGetButtonAction($langs->trans("PrescriptionSheetPdf"), '', 'default', dol_buildpath('/prescription/pdf.php', 1).'?id='.$object->id, '', 1, array('attr' => array('target' => '_blank')));
+		if (isModEnabled('clinicpay') && $user->hasRight('clinicpay', 'write')) {
+			if ($chargedBillId > 0) {
+				print dolGetButtonAction($langs->trans("PrescriptionAlreadyCharged"), '', 'default', dol_buildpath('/clinicpay/bill.php', 1).'?id='.$chargedBillId, '', 1);
+			} else {
+				print dolGetButtonAction($langs->trans("PrescriptionCharge"), '', 'default', dol_buildpath('/clinicpay/bill.php', 1).'?action=create&fk_patient='.((int) $object->fk_patient).'&fk_prescription='.((int) $object->id).'&token='.newToken(), '', 1);
+			}
+		}
 		print '</div>';
 
 		// Extension point for modPharmacy: dispense button + dispense sheets
