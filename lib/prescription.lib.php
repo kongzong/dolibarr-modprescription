@@ -31,9 +31,11 @@ define('PRESCRIPTION_STATUS_ISSUED', 1);
 define('PRESCRIPTION_STATUS_DISPENSED', 2);
 define('PRESCRIPTION_STATUS_VOIDED', 9);
 
-/** PrescriptionSheet types */
+/** PrescriptionSheet types. OTC sheets are internal paperwork created by the
+ *  pharmacy retail page: no doctor, no visit, walked-in customer. */
 define('PRESCRIPTION_TYPE_TCM', 'TCM');
 define('PRESCRIPTION_TYPE_WM', 'WM');
+define('PRESCRIPTION_TYPE_OTC', 'OTC');
 
 /**
  * @param	int		$status		Status value
@@ -68,14 +70,20 @@ function prescription_status_badge($status)
 }
 
 /**
- * @param	string	$type	TCM | WM
+ * @param	string	$type	TCM | WM | OTC
  * @return	string			Translated label
  */
 function prescription_type_label($type)
 {
 	global $langs;
 	$langs->load('prescription@prescription');
-	return $langs->trans($type === PRESCRIPTION_TYPE_WM ? 'PrescriptionTypeWM' : 'PrescriptionTypeTCM');
+	if ($type === PRESCRIPTION_TYPE_WM) {
+		return $langs->trans('PrescriptionTypeWM');
+	}
+	if ($type === PRESCRIPTION_TYPE_OTC) {
+		return $langs->trans('PrescriptionTypeOTC');
+	}
+	return $langs->trans('PrescriptionTypeTCM');
 }
 
 /**

@@ -130,14 +130,14 @@ $statusOptions = array(
 	(string) PRESCRIPTION_STATUS_DISPENSED => prescription_status_label(PRESCRIPTION_STATUS_DISPENSED),
 	(string) PRESCRIPTION_STATUS_VOIDED => prescription_status_label(PRESCRIPTION_STATUS_VOIDED),
 );
-$typeOptions = array(PRESCRIPTION_TYPE_TCM => prescription_type_label(PRESCRIPTION_TYPE_TCM), PRESCRIPTION_TYPE_WM => prescription_type_label(PRESCRIPTION_TYPE_WM));
+$typeOptions = array(PRESCRIPTION_TYPE_TCM => prescription_type_label(PRESCRIPTION_TYPE_TCM), PRESCRIPTION_TYPE_WM => prescription_type_label(PRESCRIPTION_TYPE_WM), PRESCRIPTION_TYPE_OTC => prescription_type_label(PRESCRIPTION_TYPE_OTC));
 
 print '<div class="div-table-responsive">';
 print '<table class="tagtable liste centpercent">';
 print '<tr class="liste_titre_filter">';
 print '<td class="liste_titre" colspan="2"><input type="text" name="search" class="minwidth200" placeholder="'.dol_escape_htmltag($langs->trans("PrescriptionSearchHint")).'" value="'.dol_escape_htmltag($search).'"></td>';
 print '<td class="liste_titre">'.$form->selectarray('search_type', $typeOptions, $searchType, 1, 0, 0, '', 0, 0, 0, '', 'maxwidth125').'</td>';
-print '<td class="liste_titre">'.$form->selectDate($dateFrom, 'search_from', 0, 0, 1, '', 1, 0).' - '.$form->selectDate($dateTo, 'search_to', 0, 0, 1, '', 1, 0).'</td>';
+print '<td class="liste_titre nowrap">'.$form->selectDate($dateFrom, 'search_from', 0, 0, 1, '', 1, 0).' - '.$form->selectDate($dateTo, 'search_to', 0, 0, 1, '', 1, 0).'</td>';
 print '<td class="liste_titre">'.$form->selectarray('search_doctor', $doctors, $searchDoctor, 1, 0, 0, '', 0, 0, 0, '', 'maxwidth150').'</td>';
 print '<td class="liste_titre"></td><td class="liste_titre"></td>';
 print '<td class="liste_titre center">'.$form->selectarray('search_status', $statusOptions, $status >= 0 ? (string) $status : '', 1, 0, 0, '', 0, 0, 0, '', 'maxwidth100').'</td>';

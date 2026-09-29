@@ -136,3 +136,5 @@ PrescriptionImportFailed=导入失败
 PrescriptionImportBadType=未知字典
 PrescriptionCharge=收费
 PrescriptionAlreadyCharged=已收费
+PrescriptionTypeOTC=零售（OTC）
+PrescriptionErrQtyRequired=签发前每行必须填写数量

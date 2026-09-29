@@ -136,3 +136,5 @@ PrescriptionImportFailed=Import failed
 PrescriptionImportBadType=Unknown dictionary
 PrescriptionCharge=Charge
 PrescriptionAlreadyCharged=Charged
+PrescriptionTypeOTC=Retail (OTC)
+PrescriptionErrQtyRequired=Each line needs a quantity before issuing

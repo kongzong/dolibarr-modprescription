@@ -115,8 +115,15 @@ class PrescriptionSheet extends CommonObject
 	 */
 	public function canIssue(User $user)
 	{
-		return (int) $this->status === PRESCRIPTION_STATUS_DRAFT && $user->hasRight('prescription', 'issue')
-			&& ($user->hasRight('prescription', 'admin') || (int) $this->fk_doctor === (int) $user->id);
+		if ((int) $this->status !== PRESCRIPTION_STATUS_DRAFT || !$user->hasRight('prescription', 'issue')) {
+			return false;
+		}
+		if ($user->hasRight('prescription', 'admin') || (int) $this->fk_doctor === (int) $user->id) {
+			return true;
+		}
+		// Retail (OTC) sheets carry no doctor: any user with the issue right
+		// may issue them (the pharmacist at the counter).
+		return (int) $this->presc_type === PRESCRIPTION_TYPE_OTC && (int) $this->fk_doctor <= 0;
 	}
 
 	/**
@@ -140,7 +147,9 @@ class PrescriptionSheet extends CommonObject
 	 */
 	private function validate($forIssue = false)
 	{
-		$this->presc_type = ($this->presc_type === PRESCRIPTION_TYPE_WM) ? PRESCRIPTION_TYPE_WM : PRESCRIPTION_TYPE_TCM;
+		if (!in_array($this->presc_type, array(PRESCRIPTION_TYPE_TCM, PRESCRIPTION_TYPE_WM, PRESCRIPTION_TYPE_OTC), true)) {
+			$this->presc_type = PRESCRIPTION_TYPE_TCM;
+		}
 		$this->fk_patient = (int) $this->fk_patient;
 		$this->fk_doctor = (int) $this->fk_doctor;
 		$this->fk_medrecord = (int) $this->fk_medrecord > 0 ? (int) $this->fk_medrecord : null;
@@ -149,10 +158,14 @@ class PrescriptionSheet extends CommonObject
 			$this->error = 'PrescriptionErrPatientRequired';
 			return false;
 		}
-		$doctors = patient_doctor_options($this->db);
-		if ($this->fk_doctor <= 0 || !isset($doctors[$this->fk_doctor])) {
-			$this->error = 'PrescriptionErrDoctorRequired';
-			return false;
+		// OTC retail sheets are created by the pharmacy retail page for a
+		// walked-in customer: there is no doctor, fk_doctor stays 0.
+		if ($this->presc_type !== PRESCRIPTION_TYPE_OTC) {
+			$doctors = patient_doctor_options($this->db);
+			if ($this->fk_doctor <= 0 || !isset($doctors[$this->fk_doctor])) {
+				$this->error = 'PrescriptionErrDoctorRequired';
+				return false;
+			}
 		}
 		if (empty($this->date_presc)) {
 			$this->date_presc = dol_now();
@@ -200,6 +213,13 @@ class PrescriptionSheet extends CommonObject
 				}
 				if ($forIssue && ($row['qty'] === null || $row['qty'] <= 0)) {
 					$this->error = 'PrescriptionErrGramsRequired';
+					return false;
+				}
+			} elseif ($this->presc_type === PRESCRIPTION_TYPE_OTC) {
+				// Retail: only the quantity matters (it drives stock + billing),
+				// no posology is required.
+				if ($forIssue && ($row['qty'] === null || $row['qty'] <= 0)) {
+					$this->error = 'PrescriptionErrQtyRequired';
 					return false;
 				}
 			} elseif ($forIssue) {
