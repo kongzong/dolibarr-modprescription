@@ -175,7 +175,7 @@ class modPrescription extends DolibarrModules
 		$r = 0;
 
 		$this->menu[$r++] = array(
-			'fk_menu' => 'fk_mainmenu=clinic',
+			'fk_menu' => 'fk_mainmenu=clinic,fk_leftmenu=clinic_visit',
 			'type' => 'left',
 			'titre' => 'PrescriptionList',
 			'mainmenu' => 'clinic',
