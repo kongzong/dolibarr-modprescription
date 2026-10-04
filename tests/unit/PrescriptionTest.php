@@ -45,7 +45,10 @@ class PrescriptionTest extends TestCase
 			$this->assertStringContainsString("=> ".$perm, $content, 'one-level permission '.$perm);
 		}
 		$this->assertStringNotContainsString('[5] = ', $content);
-		$this->assertStringContainsString("'fk_menu' => 'fk_mainmenu=clinic'", $content);
+		// 2026-10-03: the Clinic top menu was split into 5 left-menu groups, so
+		// the entries no longer hang directly off fk_mainmenu=clinic.
+		$this->assertStringContainsString("'fk_menu' => 'fk_mainmenu=clinic,fk_leftmenu=clinic_visit'", $content, 'prescription list sits in the visits group');
+		$this->assertStringContainsString("'fk_mainmenu=clinic,fk_leftmenu=prescription_list'", $content, 'second level keeps its own leftmenu id');
 		$this->assertStringNotContainsString("'type' => 'top'", $content);
 		foreach (array('PRESCRIPTION_RETENTION_YEARS', 'PRESCRIPTION_ALLOW_FREE_LINES', 'PRESCRIPTION_PDF_FORMAT', 'PRESCRIPTION_TCM_DEFAULT_USAGE') as $c) {
 			$this->assertStringContainsString("'".$c."'", $content);
