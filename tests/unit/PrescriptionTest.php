@@ -294,4 +294,20 @@ class PrescriptionTest extends TestCase
 		}
 		return $keys;
 	}
+
+	/**
+	 * 2026-10-04: the prescription line shows the stock position so the doctor
+	 * sees a shortage while prescribing, not when the dispenser hits FEFO.
+	 */
+	public function testPrescriptionShowsStockAndFirstBatch()
+	{
+		$page = file_get_contents(__DIR__.'/../../card.php');
+		$this->assertStringContainsString("isModEnabled('pharmacy')", $page, 'column only when the pharmacy module is on');
+		$this->assertStringContainsString('pharmacy_stock_available(', $page, 'uses the shared helper');
+		$this->assertStringContainsString('PrescriptionLineStock', $page, 'column header');
+		$this->assertStringContainsString('PrescriptionStockShort', $page, 'flags a shortage');
+		$this->assertStringContainsString('PrescriptionNoUsableBatch', $page, 'flags a batch that cannot be dispensed');
+		// A TCM line holds grams per decoction, so the real need is grams x doses.
+		$this->assertStringContainsString('$need *= max(1.0, (float) ($object->doses ?? 1));', $page, 'TCM lines compare grams x doses');
+	}
 }

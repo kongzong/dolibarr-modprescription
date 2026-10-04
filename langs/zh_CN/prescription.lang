@@ -138,3 +138,7 @@ PrescriptionCharge=收费
 PrescriptionAlreadyCharged=已收费
 PrescriptionTypeOTC=零售（OTC）
 PrescriptionErrQtyRequired=签发前每行必须填写数量
+
+PrescriptionLineStock=库存 / 首选批
+PrescriptionStockShort=需 %s，可用库存不足
+PrescriptionNoUsableBatch=无可用批次（过期或停售）

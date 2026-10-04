@@ -572,9 +572,25 @@ if ($action == 'create') {
 		print '</table>';
 
 		// Lines
-		$isTcm = ($object->presc_type === PRESCRIPTION_TYPE_TCM);
-		print '<br><div class="div-table-responsive-no-min"><table class="noborder centpercent"><tr class="liste_titre">';
-		print '<th style="width:28px;">#</th><th>'.$langs->trans("PrescriptionLineDrug").'</th>';
+	$isTcm = ($object->presc_type === PRESCRIPTION_TYPE_TCM);
+	// Stock preview: the doctor should see a product is short (or has no usable
+	// batch) while prescribing, not when the dispenser hits the FEFO guard.
+	$stockInfo = array();
+	if (isModEnabled('pharmacy')) {
+		dol_include_once('/pharmacy/lib/pharmacy.lib.php');
+		$stockWarehouse = (int) getDolGlobalInt('PHARMACY_DEFAULT_WAREHOUSE', 0);
+		foreach ($object->lines as $l) {
+			$pid = (int) ($l['fk_product'] ?? 0);
+			if ($pid > 0 && !isset($stockInfo[$pid])) {
+				$stockInfo[$pid] = pharmacy_stock_available($db, $pid, $stockWarehouse);
+			}
+		}
+	}
+	print '<br><div class="div-table-responsive-no-min"><table class="noborder centpercent"><tr class="liste_titre">';
+	print '<th style="width:28px;">#</th><th>'.$langs->trans("PrescriptionLineDrug").'</th>';
+	if (!empty($stockInfo) || isModEnabled('pharmacy')) {
+		print '<th class="center nowrap">'.$langs->trans("PrescriptionLineStock").'</th>';
+	}
 		if ($isTcm) {
 			print '<th>'.$langs->trans("PrescriptionLineGrams").'</th><th>'.$langs->trans("PrescriptionLineDecoct").'</th>';
 		} else {
@@ -589,6 +605,35 @@ if ($action == 'create') {
 			print '<tr class="oddeven"'.($l['allergy_hit'] ? ' style="background:#fdecea;"' : '').'>';
 			print '<td>'.($i + 1).'</td>';
 			print '<td>'.($l['allergy_hit'] ? '<span class="error" title="'.dol_escape_htmltag($langs->trans("PrescriptionAllergyHit")).'">※</span> ' : '').dol_escape_htmltag($l['label']).($l['product_ref'] ? ' <span class="opacitymedium small">'.dol_escape_htmltag($l['product_ref']).'</span>' : '').'</td>';
+			if (!empty($stockInfo) || isModEnabled('pharmacy')) {
+				$pid = (int) ($l['fk_product'] ?? 0);
+				$st = ($pid > 0 && isset($stockInfo[$pid])) ? $stockInfo[$pid] : null;
+				if (!$st) {
+					print '<td class="center opacitymedium">-</td>';
+				} else {
+					// A TCM line holds the grams of ONE decoction, the real need is
+					// grams x doses (see the dosage rule in the pharmacy module).
+					$need = (float) ($l['qty'] ?? 0);
+					if ($isTcm) {
+						$need *= max(1.0, (float) ($object->doses ?? 1));
+					}
+					$short = $need > $st['reel'] + 0.0005;
+					$cell = '<span class="'.($short ? 'error' : '').'">'.number_format($st['reel'], 0).'</span>';
+					if ($st['batch'] !== '') {
+						$cell .= '<br><span class="opacitymedium small">'.dol_escape_htmltag($st['batch']);
+						if ($st['sellby']) {
+							$cell .= ' · '.dol_print_date($st['sellby'], 'day');
+						}
+						$cell .= '</span>';
+					} else {
+						$cell .= '<br><span class="error small">'.$langs->trans("PrescriptionNoUsableBatch").'</span>';
+					}
+					if ($short) {
+						$cell .= '<br><span class="error small">'.$langs->trans("PrescriptionStockShort", $need).'</span>';
+					}
+					print '<td class="center nowrap">'.$cell.'</td>';
+				}
+			}
 			if ($isTcm) {
 				print '<td>'.$fmt($l['qty']).dol_escape_htmltag((string) $l['qty_unit']).'</td>';
 				print '<td>'.dol_escape_htmltag(isset($dictDecoct[$l['decoct_code']]) ? $dictDecoct[$l['decoct_code']] : (string) $l['decoct_code']).'</td>';

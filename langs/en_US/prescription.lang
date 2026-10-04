@@ -138,3 +138,6 @@ PrescriptionCharge=Charge
 PrescriptionAlreadyCharged=Charged
 PrescriptionTypeOTC=Retail (OTC)
 PrescriptionErrQtyRequired=Each line needs a quantity before issuing
+PrescriptionLineStock=Stock / first batch
+PrescriptionStockShort=Needs %s, not enough on hand
+PrescriptionNoUsableBatch=No usable batch (expired or on hold)
