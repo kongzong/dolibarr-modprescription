@@ -203,6 +203,21 @@ class modPrescription extends DolibarrModules
 			'target' => '',
 			'user' => 2,
 		);
+		$this->menu[$r++] = array(
+			'fk_menu' => 'fk_mainmenu=clinic,fk_leftmenu=clinic_visit',
+			'type' => 'left',
+			'titre' => 'PrescriptionTplMenu',
+			'mainmenu' => 'clinic',
+			'leftmenu' => 'prescription_template',
+			'prefix' => img_picto('', 'fa-clone_fas_#8e24aa', 'class="paddingright pictofixedwidth"'),
+			'url' => '/prescription/template.php',
+			'langs' => 'prescription@prescription',
+			'position' => 1200 + $r,
+			'enabled' => 'isModEnabled("prescription")',
+			'perms' => '$user->hasRight("prescription", "read")',
+			'target' => '',
+			'user' => 2,
+		);
 	}
 
 	/**

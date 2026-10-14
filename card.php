@@ -302,10 +302,10 @@ function prescription_print_form(PrescriptionSheet $o, $isCreate)
 	print '<tr><td class="titlefieldcreate">'.$langs->trans("PrescriptionType").'</td><td><strong>'.prescription_type_label($o->presc_type).'</strong></td></tr>';
 	print '<tr><td class="fieldrequired">'.$langs->trans("PrescriptionDoctor").'</td><td>';
 	$selDoctor = GETPOSTISSET('fk_doctor') ? GETPOSTINT('fk_doctor') : ($o->fk_doctor ? $o->fk_doctor : (isset($doctors[$user->id]) ? $user->id : 0));
-	print $form->selectarray('fk_doctor', $doctors, $selDoctor, 1, 0, 0, '', 0, 0, 0, '', 'minwidth200');
+	print $form->selectarray('fk_doctor', $doctors, $selDoctor, -1, 0, 0, '', 0, 0, 0, '', 'minwidth200');
 	print '</td></tr>';
 	print '<tr><td>'.$langs->trans("PrescriptionDepartment").'</td><td>';
-	print $form->selectarray('fk_department', $departments, GETPOSTISSET('fk_department') ? GETPOSTINT('fk_department') : (int) $o->fk_department, 1, 0, 0, '', 0, 0, 0, '', 'minwidth200');
+	print $form->selectarray('fk_department', $departments, GETPOSTISSET('fk_department') ? GETPOSTINT('fk_department') : (int) $o->fk_department, -1, 0, 0, '', 0, 0, 0, '', 'minwidth200');
 	print '</td></tr>';
 	print '<tr><td>'.$langs->trans("PrescriptionDate").'</td><td>';
 	$ts = GETPOSTISSET('date_prescyear') ? dol_mktime(GETPOSTINT('date_preschour'), GETPOSTINT('date_prescmin'), 0, GETPOSTINT('date_prescmonth'), GETPOSTINT('date_prescday'), GETPOSTINT('date_prescyear')) : ($o->date_presc ? $o->date_presc : dol_now());
@@ -352,7 +352,7 @@ function prescription_print_form(PrescriptionSheet $o, $isCreate)
 		print '<th style="width:150px;">'.$langs->trans("PrescriptionLineQty").'</th><th>'.$langs->trans("PrescriptionLineSig").'</th>';
 	}
 	print '<th style="width:30px;"></th></tr></thead><tbody></tbody></table>';
-	print '<div style="margin:6px 0;"><a href="#" id="presc_add_line" class="button small">'.$langs->trans("PrescriptionAddLine").'</a> ';
+	print '<div style="margin:6px 0;"><span id="presc_tpl_slot"></span> <a href="#" id="presc_add_line" class="button small">'.$langs->trans("PrescriptionAddLine").'</a> ';
 	print '<span class="opacitymedium">'.$langs->trans("PrescriptionLineHint").'</span></div>';
 
 	print '<script>
@@ -414,6 +414,31 @@ $(function() {
 	var initial = '.json_encode($jsLines, JSON_UNESCAPED_UNICODE).';
 	if (initial.length) { $.each(initial, function(i, d) { addRow(d); }); } else { addRow(); addRow(); addRow(); }
 	$("#presc_add_line").on("click", function(e) { e.preventDefault(); addRow().find(".presc-label").focus(); });
+	// Apply template: list picker loaded by type; picking one replaces empty rows or asks before overwriting
+	var tplUrl = "'.dol_buildpath('/prescription/ajax/template.php', 1).'";
+	$.getJSON(tplUrl, { list: 1, type: "'.($isTcm ? 'TCM' : 'WM').'" }, function(list) {
+		if (!list || !list.length) { return; }
+		var sel = $("<select class=\"flat minwidth200\" id=\"presc_tpl_pick\"></select>").append($("<option></option>").attr("value", "").text("'.dol_escape_js($langs->trans("PrescriptionTplApply")).'"));
+		$.each(list, function(i, t) { sel.append($("<option></option>").attr("value", t.id).text(t.name + " (" + t.nlines + ")")); });
+		$("#presc_tpl_slot").append(sel).append(" ");
+		sel.on("change", function() {
+			var tid = $(this).val();
+			if (!tid) { return; }
+			$.getJSON(tplUrl, { id: tid }, function(tpl) {
+				if (!tpl || tpl.error) { return; }
+				var hasContent = tbody.find("input[name=\"line_label[]\"]").filter(function() { return $(this).val(); }).length > 0;
+				var doApply = function() {
+					tbody.empty();
+					$.each(tpl.lines, function(i, d) { addRow(d); });
+					if (tpl.doses && $("input[name=doses]").length) { $("input[name=doses]").val(tpl.doses); }
+					if (tpl.diagnosis && $("input[name=diagnosis_text]").length && !$("input[name=diagnosis_text]").val()) { $("input[name=diagnosis_text]").val(tpl.diagnosis); }
+					sel.val("");
+				};
+				if (hasContent && !window.confirm("'.dol_escape_js($langs->trans("PrescriptionTplOverwrite")).'")) { sel.val(""); return; }
+				doApply();
+			});
+		});
+	});
 	// Enter in the last row adds a new one instead of submitting
 	$("#presc_lines").on("keydown", "input", function(e) {
 		if (e.keyCode === 13) { e.preventDefault(); var tr = $(this).closest("tr"); if (tr.is(":last-child")) { addRow().find(".presc-label").focus(); } else { tr.next().find(".presc-label").focus(); } }
