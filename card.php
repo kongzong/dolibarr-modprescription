@@ -604,9 +604,29 @@ if ($action == 'create') {
 	if (isModEnabled('pharmacy')) {
 		dol_include_once('/pharmacy/lib/pharmacy.lib.php');
 		$stockWarehouse = (int) getDolGlobalInt('PHARMACY_DEFAULT_WAREHOUSE', 0);
+		// Services (fk_product_type = 1: consultation / treatment fee / prepaid
+		// card) are not stock items. Without this filter the column shows
+		// "no usable batch / stock short" for every 诊疗项目.
+		$linePids = array();
 		foreach ($object->lines as $l) {
 			$pid = (int) ($l['fk_product'] ?? 0);
-			if ($pid > 0 && !isset($stockInfo[$pid])) {
+			if ($pid > 0) {
+				$linePids[$pid] = $pid;
+			}
+		}
+		$servicePids = array();
+		if (!empty($linePids)) {
+			$resType = $db->query("SELECT rowid FROM ".$db->prefix()."product WHERE fk_product_type = 1 AND rowid IN (".implode(',', $linePids).")");
+			if ($resType) {
+				while ($oType = $db->fetch_object($resType)) {
+					$servicePids[(int) $oType->rowid] = 1;
+				}
+				$db->free($resType);
+			}
+		}
+		foreach ($object->lines as $l) {
+			$pid = (int) ($l['fk_product'] ?? 0);
+			if ($pid > 0 && empty($servicePids[$pid]) && !isset($stockInfo[$pid])) {
 				$stockInfo[$pid] = pharmacy_stock_available($db, $pid, $stockWarehouse);
 			}
 		}
