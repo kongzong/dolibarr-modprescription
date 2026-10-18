@@ -166,3 +166,5 @@ PrescriptionTplErrLines=至少需要一行药品。
 PrescriptionTplMenu=处方模板
 PrescriptionTplApply=从模板带入…
 PrescriptionTplOverwrite=带入模板将替换当前已填的药品行，继续？
+
+PrescriptionTplErrNameLong=模板名称不能超过 128 个字符

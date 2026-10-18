@@ -165,3 +165,5 @@ PrescriptionTplErrLines=At least one drug row is required.
 PrescriptionTplMenu=Prescription templates
 PrescriptionTplApply=Apply template...
 PrescriptionTplOverwrite=Applying a template will replace the rows you already filled in. Continue?
+
+PrescriptionTplErrNameLong=Template name must be 128 characters or less

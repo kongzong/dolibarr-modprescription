@@ -150,6 +150,12 @@ class PrescriptionTemplate extends CommonObject
 			$this->error = 'BadValueForNameOrType';
 			return -1;
 		}
+		if (dol_strlen(trim((string) $this->name)) > 128) {
+			// llx_prescription_template.name is varchar(128): catch it here so the
+			// user gets a readable message instead of MySQL "Data too long".
+			$this->error = 'PrescriptionTplErrNameLong';
+			return -1;
+		}
 		$prefix = $this->db->prefix();
 		$this->db->begin();
 
@@ -185,6 +191,10 @@ class PrescriptionTemplate extends CommonObject
 	{
 		if ($this->rowid <= 0 || trim((string) $this->name) === '' || !in_array($this->presc_type, array('TCM', 'WM'), true)) {
 			$this->error = 'BadValueForIdNameOrType';
+			return -1;
+		}
+		if (dol_strlen(trim((string) $this->name)) > 128) {
+			$this->error = 'PrescriptionTplErrNameLong';
 			return -1;
 		}
 		$prefix = $this->db->prefix();

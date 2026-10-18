@@ -127,7 +127,7 @@ if (($action == 'save' || $action == 'confirm_delete') && $canWrite) {
 				header("Location: ".dol_buildpath('/prescription/template.php', 1).'?saved=1');
 				exit;
 			}
-			$errors[] = $object->error;
+			$errors[] = $langs->trans((string) $object->error);
 		}
 	} elseif ($action == 'save') {
 		header("Location: ".dol_buildpath('/prescription/template.php', 1));
@@ -152,8 +152,11 @@ llxHeader('', $langs->trans("PrescriptionTplTitle"));
 
 print load_fiche_titre($langs->trans("PrescriptionTplTitle"), '', 'fa-prescription');
 
+// Validation errors are printed inline: setEventMessages() after llxHeader()
+// only surfaces on the next page load, so a rejected save looked like a silent
+// no-op (nothing saved, no message).
 foreach ($errors as $e) {
-	setEventMessages($e, null, 'errors');
+	print '<div class="error" style="padding:6px 10px;">'.dol_escape_htmltag($e).'</div>';
 }
 if (GETPOSTINT('saved') === 1) {
 	print '<div class="ok" style="padding:6px 10px;">'.dol_escape_htmltag($langs->trans("RecordSaved")).'</div>';
