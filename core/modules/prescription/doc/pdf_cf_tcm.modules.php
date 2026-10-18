@@ -98,11 +98,17 @@ class pdf_cf_tcm extends ModelePDFPrescription
 		$pdf->SetFont($this->font, '', $this->fontSize);
 		$modes = array('SELF' => 'PrescriptionDecoctSelf', 'CLINIC' => 'PrescriptionDecoctClinic', 'GRANULE' => 'PrescriptionDecoctGranule');
 		$parts = array();
-		$parts[] = $outputlangs->transnoentities('PrescriptionTotalDoses', (int) $object->doses);
+		// doses = 0 means "not a decoction pack" (OTC / western medicine): printing
+		// "共 0 剂" on those sheets is meaningless, so the line is skipped.
+		if ((int) $object->doses > 0) {
+			$parts[] = $outputlangs->transnoentities('PrescriptionTotalDoses', (int) $object->doses);
+		}
 		if (!empty($object->decoct_mode) && isset($modes[$object->decoct_mode])) {
 			$parts[] = $outputlangs->transnoentities($modes[$object->decoct_mode]);
 		}
-		$y = $this->text($pdf, $x, $y, $w, implode('    ', $parts));
+		if (!empty($parts)) {
+			$y = $this->text($pdf, $x, $y, $w, implode('    ', $parts));
+		}
 		if (!empty($object->usage_note)) {
 			$y = $this->text($pdf, $x, $y, $w, $outputlangs->transnoentities('PrescriptionUsageShort').': '.$object->usage_note);
 		}
