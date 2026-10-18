@@ -155,7 +155,7 @@ print load_fiche_titre($langs->trans("PrescriptionTplTitle"), '', 'fa-prescripti
 foreach ($errors as $e) {
 	setEventMessages($e, null, 'errors');
 }
-if (GETPOST('saved', 'int') === 1) {
+if (GETPOSTINT('saved') === 1) {
 	print '<div class="ok" style="padding:6px 10px;">'.dol_escape_htmltag($langs->trans("RecordSaved")).'</div>';
 }
 
