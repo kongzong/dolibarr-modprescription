@@ -76,7 +76,7 @@ class PrescriptionTemplate extends CommonObject
 	{
 		$prefix = $this->db->prefix();
 		$sql = "SELECT rowid, entity, name, presc_type, doses, diagnosis_text, note, fk_user_creat, date_creation";
-		$sql .= " FROM ".$prefix."prescription_template WHERE rowid = ".((int) $id);
+		$sql .= " FROM ".$prefix."prescription_template WHERE rowid = ".((int) $id)." AND status <> 9";
 		$resql = $this->db->query($sql);
 		if (!$resql) {
 			$this->error = $this->db->lasterror();
@@ -217,7 +217,7 @@ class PrescriptionTemplate extends CommonObject
 	}
 
 	/**
-	 * Delete head + lines.
+	 * Soft delete: keep head + lines, mark status 9 so the trace survives.
 	 *
 	 * @return	int		1 ok, <0 error
 	 */
@@ -227,14 +227,10 @@ class PrescriptionTemplate extends CommonObject
 			return -1;
 		}
 		$prefix = $this->db->prefix();
-		$this->db->begin();
-		if (!$this->db->query("DELETE FROM ".$prefix."prescription_template_line WHERE fk_template = ".((int) $this->rowid))
-			|| !$this->db->query("DELETE FROM ".$prefix."prescription_template WHERE rowid = ".((int) $this->rowid))) {
+		if (!$this->db->query("UPDATE ".$prefix."prescription_template SET status = 9 WHERE rowid = ".((int) $this->rowid))) {
 			$this->error = $this->db->lasterror();
-			$this->db->rollback();
 			return -1;
 		}
-		$this->db->commit();
 		return 1;
 	}
 
@@ -286,7 +282,7 @@ class PrescriptionTemplate extends CommonObject
 		$sql = "SELECT t.rowid, t.name, t.presc_type, t.doses, t.diagnosis_text, COUNT(l.rowid) AS nlines";
 		$sql .= " FROM ".$prefix."prescription_template t";
 		$sql .= " LEFT JOIN ".$prefix."prescription_template_line l ON l.fk_template = t.rowid";
-		$sql .= " WHERE t.entity = ".getDolGlobalInt('entity', 1);
+		$sql .= " WHERE t.entity = ".getDolGlobalInt('entity', 1)." AND t.status <> 9";
 		if ($type === 'TCM' || $type === 'WM') {
 			$sql .= " AND t.presc_type = '".$db->escape($type)."'";
 		}

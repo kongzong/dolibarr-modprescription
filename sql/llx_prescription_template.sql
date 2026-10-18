@@ -8,6 +8,7 @@ CREATE TABLE llx_prescription_template(
 	doses				integer DEFAULT NULL,			-- TCM: number of doses prefilled
 	diagnosis_text		varchar(255) DEFAULT NULL,		-- optional default diagnosis
 	note				text DEFAULT NULL,
+	status				smallint DEFAULT 0 NOT NULL,	-- 0 normal, 9 deleted (soft delete)
 	fk_user_creat		integer DEFAULT NULL,
 	date_creation		datetime NOT NULL,
 	tms					timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
