@@ -38,7 +38,6 @@ dol_include_once('/patient/lib/patient.lib.php');
 /**
  * API class for Prescriptions module
  *
- * @url     GET /prescriptions
  * @access  protected
  * @class   DolibarrApiAccess {@requires user,external}
  */
@@ -63,7 +62,7 @@ class Prescription extends DolibarrApi
 	/**
 	 * List prescriptions.
 	 *
-	 * @url	GET prescriptions
+	 * @url	GET /
 	 *
 	 * @param	string	$q			Ref / card no. / patient name
 	 * @param	int		$patient	Patient rowid
@@ -111,7 +110,7 @@ class Prescription extends DolibarrApi
 	 * Get one prescription with its lines (medical data: audited as
 	 * PRESCRIPTION_READ).
 	 *
-	 * @url	GET prescriptions/{id}
+	 * @url	GET {id}
 	 *
 	 * @param	int		$id		PrescriptionSheet rowid
 	 * @return	array
@@ -138,7 +137,7 @@ class Prescription extends DolibarrApi
 	 *                       "decoct_code": "HOUXIA", "dose": 0.5, "dose_unit": "ML", "route_code": "PO",
 	 *                       "freq_code": "TID", "days": 7, "sig_note": "..." } ] }
 	 *
-	 * @url	POST prescriptions
+	 * @url	POST /
 	 *
 	 * @param	array	$request_data	Body
 	 * @return	array
@@ -170,7 +169,7 @@ class Prescription extends DolibarrApi
 	 * Update a draft. Patient / ref / type never change.
 	 * Body: same fields as POST except fk_patient / presc_type.
 	 *
-	 * @url	PUT prescriptions/{id}
+	 * @url	PUT {id}
 	 *
 	 * @param	int		$id				PrescriptionSheet rowid
 	 * @param	array	$request_data	Body
@@ -210,7 +209,7 @@ class Prescription extends DolibarrApi
 	 * Body: { "allergy_override_reason": "..." } optional, required to
 	 * release a light/moderate allergy hit.
 	 *
-	 * @url	POST prescriptions/{id}/issue
+	 * @url	POST {id}/issue
 	 *
 	 * @param	int		$id				PrescriptionSheet rowid
 	 * @param	array	$request_data	Body
@@ -248,7 +247,7 @@ class Prescription extends DolibarrApi
 	 * Void a prescription (draft or issued; dispensed are handled by
 	 * modPharmacy). Body: { "reason": "..." } (required). Nothing is deleted.
 	 *
-	 * @url	POST prescriptions/{id}/void
+	 * @url	POST {id}/void
 	 *
 	 * @param	int		$id				PrescriptionSheet rowid
 	 * @param	array	$request_data	Body
@@ -280,7 +279,7 @@ class Prescription extends DolibarrApi
 	 * it with POST prescriptions and passes the same lines). The source is
 	 * returned with its lines; a PRESCRIPTION_COPY audit row is written.
 	 *
-	 * @url	POST prescriptions/{id}/copy
+	 * @url	POST {id}/copy
 	 *
 	 * @param	int		$id		PrescriptionSheet rowid
 	 * @return	array
