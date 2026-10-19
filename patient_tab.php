@@ -99,7 +99,7 @@ foreach ($rows as $r) {
 	print '<tr class="oddeven"'.((int) $r->status === PRESCRIPTION_STATUS_VOIDED ? ' style="opacity:.55"' : '').'>';
 	print '<td><a href="'.dol_buildpath('/prescription/card.php', 1).'?id='.((int) $r->rowid).'">'.dol_escape_htmltag($r->ref).'</a></td>';
 	print '<td>'.prescription_type_label($r->presc_type).'</td>';
-	print '<td>'.dol_print_date($db->jdate($r->date_presc), 'dayhour').'</td>';
+	print '<td>'.dol_print_date($db->jdate($r->date_presc), '%Y-%m-%d %H:%M').'</td>';
 	print '<td>'.dol_escape_htmltag(trim($r->lastname.' '.$r->firstname)).'</td>';
 	print '<td>'.dol_escape_htmltag((string) $r->diagnosis_text).'</td>';
 	print '<td>'.((int) $r->nb_lines).'</td>';

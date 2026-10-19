@@ -897,7 +897,7 @@ class PrescriptionSheet extends CommonObject
 			}
 		}
 		if ((int) $old->date_presc !== (int) $this->date_presc) {
-			$changes['date_presc'] = array('old' => dol_print_date($old->date_presc, 'dayhour'), 'new' => dol_print_date($this->date_presc, 'dayhour'));
+			$changes['date_presc'] = array('old' => dol_print_date($old->date_presc, '%Y-%m-%d %H:%M'), 'new' => dol_print_date($this->date_presc, '%Y-%m-%d %H:%M'));
 		}
 		$a = $this->linesSummary($old->lines);
 		$b = $this->linesSummary($this->lines);

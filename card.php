@@ -580,12 +580,12 @@ if ($action == 'create') {
 		}
 
 		print '<div class="fichecenter"><table class="border tableforfield centpercent">';
-		print '<tr><td class="titlefield">'.$langs->trans("PrescriptionDoctor").'</td><td>'.dol_escape_htmltag(isset($doctors[$object->fk_doctor]) ? $doctors[$object->fk_doctor] : '#'.$object->fk_doctor);
+		print '<tr><td class="titlefield">'.$langs->trans("PrescriptionDoctor").'</td><td>'.dol_escape_htmltag(patient_doctor_label($db, $object->fk_doctor, $doctors));
 		if ($object->fk_department && isset($departments[$object->fk_department])) {
 			print ' <span class="opacitymedium">'.dol_escape_htmltag($departments[$object->fk_department]).'</span>';
 		}
 		print '</td></tr>';
-		print '<tr><td>'.$langs->trans("PrescriptionDate").'</td><td>'.dol_print_date($object->date_presc, 'dayhour').'</td></tr>';
+		print '<tr><td>'.$langs->trans("PrescriptionDate").'</td><td>'.dol_print_date($object->date_presc, '%Y-%m-%d %H:%M').'</td></tr>';
 		if ($object->fk_medrecord && isModEnabled('medrecord')) {
 			dol_include_once('/medrecord/class/medicalrecord.class.php');
 			$rec = new MedicalRecord($db);
@@ -704,12 +704,12 @@ if ($action == 'create') {
 			print '<tr><td>'.$langs->trans("PrescriptionAllergyReleased").'</td><td class="error">'.dol_escape_htmltag($object->allergy_override_reason).'</td></tr>';
 		}
 		if ($object->status >= PRESCRIPTION_STATUS_ISSUED && $object->fk_user_issue) {
-			print '<tr><td>'.$langs->trans("PrescriptionIssuedBy").'</td><td>'.dol_escape_htmltag(isset($doctors[$object->fk_user_issue]) ? $doctors[$object->fk_user_issue] : '#'.$object->fk_user_issue).' '.dol_print_date($object->date_issued, 'dayhour').'</td></tr>';
+			print '<tr><td>'.$langs->trans("PrescriptionIssuedBy").'</td><td>'.dol_escape_htmltag(patient_doctor_label($db, $object->fk_user_issue, $doctors)).' '.dol_print_date($object->date_issued, '%Y-%m-%d %H:%M').'</td></tr>';
 		}
 		if ($object->status == PRESCRIPTION_STATUS_VOIDED) {
-			print '<tr><td>'.$langs->trans("PrescriptionVoidReason").'</td><td class="error">'.dol_escape_htmltag((string) $object->void_reason).' <span class="opacitymedium">('.dol_print_date($object->date_void, 'dayhour').')</span></td></tr>';
+			print '<tr><td>'.$langs->trans("PrescriptionVoidReason").'</td><td class="error">'.dol_escape_htmltag((string) $object->void_reason).' <span class="opacitymedium">('.dol_print_date($object->date_void, '%Y-%m-%d %H:%M').')</span></td></tr>';
 		}
-		print '<tr><td>'.$langs->trans("DateCreation").'</td><td>'.dol_print_date($object->date_creation, 'dayhour').'</td></tr>';
+		print '<tr><td>'.$langs->trans("DateCreation").'</td><td>'.dol_print_date($object->date_creation, '%Y-%m-%d %H:%M').'</td></tr>';
 		print '</table></div>';
 
 		print dol_get_fiche_end();

@@ -167,7 +167,7 @@ foreach ($rows as $row) {
 	print '<td><a href="'.$url.'">'.img_picto('', 'fa-prescription', 'class="pictofixedwidth"').dol_escape_htmltag($row->ref).'</a></td>';
 	print '<td><a href="'.dol_buildpath('/patient/card.php', 1).'?id='.((int) $row->fk_patient).'">'.dol_escape_htmltag($row->patient_name).'</a> <span class="opacitymedium">'.dol_escape_htmltag($row->card_no).'</span></td>';
 	print '<td>'.prescription_type_label($row->presc_type).'</td>';
-	print '<td>'.dol_print_date($db->jdate($row->date_presc), 'dayhour').'</td>';
+	print '<td>'.dol_print_date($db->jdate($row->date_presc), '%Y-%m-%d %H:%M').'</td>';
 	print '<td>'.dol_escape_htmltag(trim($row->lastname.' '.$row->firstname)).'</td>';
 	print '<td>'.dol_escape_htmltag((string) $row->diagnosis_text).'</td>';
 	print '<td>'.((int) $row->nb_lines).($row->presc_type === PRESCRIPTION_TYPE_TCM && $row->doses ? ' &times; '.((int) $row->doses).$langs->trans("PrescriptionDosesUnit") : '').'</td>';
