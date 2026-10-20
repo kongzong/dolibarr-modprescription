@@ -186,7 +186,7 @@ if ($action == 'update' && $object->id > 0) {
 	$action = 'edit';
 }
 
-if ($action == 'confirm_issue' && $confirm == 'yes' && $object->id > 0) {
+if ($action == 'confirm_issue' && $confirm == 'yes' && GETPOST('token', 'alpha') != '' && $object->id > 0) {
 	$object->allergy_override_reason = GETPOSTINT('allergy_override') ? GETPOST('allergy_override_reason', 'alphanohtml') : $object->allergy_override_reason;
 	$result = $object->issue($user);
 	if ($result > 0) {
@@ -207,7 +207,7 @@ if ($action == 'confirm_issue' && $confirm == 'yes' && $object->id > 0) {
 	exit;
 }
 
-if ($action == 'confirm_void' && $confirm == 'yes' && $object->id > 0) {
+if ($action == 'confirm_void' && $confirm == 'yes' && GETPOST('token', 'alpha') != '' && $object->id > 0) {
 	$result = $object->void($user, GETPOST('void_reason', 'alphanohtml'));
 	setEventMessages($langs->trans($result > 0 ? "PrescriptionVoided" : $object->error), null, $result > 0 ? 'mesgs' : 'errors');
 	header("Location: ".$_SERVER["PHP_SELF"]."?id=".$object->id);
